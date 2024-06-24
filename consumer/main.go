@@ -10,7 +10,6 @@ import (
 )
 
 func main() {
-	// to consume messages
 	topic := "my-topic"
 	partition := 0
 
