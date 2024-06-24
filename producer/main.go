@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -16,8 +15,6 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to dial leader:", err)
 	}
-
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 	_, err = conn.WriteMessages(
 		kafka.Message{Value: []byte("one!")},
 		kafka.Message{Value: []byte("two!")},
