@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/ahmadexe/go-kafka/data"
 	"github.com/segmentio/kafka-go"
 )
 
 func main() {
-	topic := "my-topic"
+	topic := "auth"
 	partition := 0
 
 	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:29092", topic, partition)
@@ -17,8 +20,7 @@ func main() {
 		log.Fatal("failed to dial leader:", err)
 	}
 
-	// Removed deadline setting
-	// conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
 
 	b := make([]byte, 10e3) // 10KB max per message
@@ -27,7 +29,13 @@ func main() {
 		if err != nil {
 			break
 		}
-		fmt.Println(string(b[:n]))
+		// fmt.Println(string(b[:n]))
+		var message data.Message
+		if err := json.Unmarshal(b[:n], &message); err != nil {
+			log.Fatal("failed to unmarshal message:", err)
+		}
+
+		fmt.Printf("message: %s\n", message.Message)
 	}
 
 	if err := batch.Close(); err != nil {
