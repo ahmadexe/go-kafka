@@ -20,8 +20,8 @@ git clone git@github.com:ahmadexe/go-kafka.git
 7. Pull up postman send a POST request at http://localhost:8080/message the body should look something like
    ```
     {
-	    "topic": "auth",
-      "message": "Hi this is message 1"
+	"topic": "auth",
+	"message": "Hi this is message 1"
     }
    ```
 
