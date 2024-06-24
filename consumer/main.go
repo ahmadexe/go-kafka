@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/ahmadexe/go-kafka/data"
 	"github.com/segmentio/kafka-go"
@@ -15,34 +14,27 @@ func main() {
 	topic := "auth"
 	partition := 0
 
-	conn, err := kafka.DialLeader(context.Background(), "tcp", "localhost:29092", topic, partition)
-	if err != nil {
-		log.Fatal("failed to dial leader:", err)
-	}
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:   []string{"localhost:29092"},
+		Topic:     topic,
+		Partition: partition,
+		MaxBytes:  10e6, // 10MB
+	})
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	batch := conn.ReadBatch(10e3, 1e6) // fetch 10KB min, 1MB max
-
-	b := make([]byte, 10e3) // 10KB max per message
 	for {
-		n, err := batch.Read(b)
+		m, err := r.ReadMessage(context.Background())
 		if err != nil {
 			break
 		}
-		// fmt.Println(string(b[:n]))
 		var message data.Message
-		if err := json.Unmarshal(b[:n], &message); err != nil {
+		if err := json.Unmarshal(m.Value, &message); err != nil {
 			log.Fatal("failed to unmarshal message:", err)
 		}
 
 		fmt.Printf("message: %s\n", message.Message)
 	}
-
-	if err := batch.Close(); err != nil {
-		log.Fatal("failed to close batch:", err)
-	}
-
-	if err := conn.Close(); err != nil {
-		log.Fatal("failed to close connection:", err)
+	
+	if err := r.Close(); err != nil {
+		log.Fatal("failed to close reader:", err)
 	}
 }
